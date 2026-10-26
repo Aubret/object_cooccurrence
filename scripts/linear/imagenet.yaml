@@ -1,0 +1,60 @@
+defaults:
+  - _self_
+  - wandb: private.yaml
+  - override hydra/hydra_logging: disabled
+  - override hydra/job_logging: disabled
+
+# disable hydra outputs
+hydra:
+  output_subdir: null
+  run:
+    dir: .
+
+name: "imagenet_mocov3"
+
+backbone:
+  name: "resnet50"
+method: "mocov3"
+data:
+  dataset: imagenet100_im
+  train_path: "/home/aubret/"
+  val_path: "/home/aubret"
+  num_workers: 8
+optimizer:
+  name: "sgd"
+  batch_size: 64
+  lr: 0.3
+  weight_decay: 0
+scheduler:
+  name: "step"
+  lr_decay_steps: [60, 80]
+checkpoint:
+  enabled: True
+  dir: "/scratch_shared/aubret/trained_models2"
+  frequency: 1
+  keep_prev: False
+  save_last: True
+auto_resume:
+  enabled: False
+early_stopping:
+  enabled: False
+
+grid:
+  enabled: True
+  lr: [0.05,0.1,0.2,0.4,0.8,1.6]
+  layer_names: ["backbone"]
+  use_avgpool: [ True ]
+  use_cls_token: [ True ]
+  use_n_blocks: [ 1 ]
+use_projector: False
+pre_extract_feats: False
+finetune: False
+
+# overwrite PL stuff
+max_epochs: 100
+devices: 4
+sync_batchnorm: True
+accelerator: "gpu"
+strategy: "ddp"
+precision: 16-mixed
+log_every_n_steps: 50
