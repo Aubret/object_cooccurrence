@@ -46,7 +46,7 @@
 
 - rrc:
     enabled: True
-    crop_min_scale: 0.7
+    crop_min_scale: 0.2
     crop_max_scale: 1.0
   color_jitter:
     prob: 0.8

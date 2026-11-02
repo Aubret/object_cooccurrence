@@ -20,9 +20,6 @@ import warnings
 
 import omegaconf.listconfig
 
-from solo.backbones.zoo.registry import model_registry
-from solo.methods.segmentation import fix_pos_embedding
-
 # Suppress the specific warning
 warnings.filterwarnings(
     "ignore",
@@ -89,20 +86,19 @@ def main(cfg: DictConfig):
     OmegaConf.set_struct(cfg, False)
     cfg = parse_cfg(cfg)
 
-    if "pretrained" in cfg.backbone.name:
-        # format fiftyone_NAME
-        pretrained_backbone_name = "_".join(cfg.backbone.name.split("_")[1:])
-        # self.backbone = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitb14')
-        # for param in self.backbone.parameters():
-        #     param.requires_grad = True
-        backbone, num_features = model_registry[pretrained_backbone_name](**cfg.backbone.kwargs)
-        backbone.num_features = num_features
-        print("load pretrained")
-    else:
-        backbone_model = BaseMethod._BACKBONES[cfg.backbone.name]
-        print(cfg.backbone.name)
-        # initialize backbone
-        backbone = backbone_model(method=cfg.pretrain_method, **cfg.backbone.kwargs)
+    # if "pretrained" in cfg.backbone.name:
+    #     # format fiftyone_NAME
+    #     pretrained_backbone_name = "_".join(cfg.backbone.name.split("_")[1:])
+    #     # self.backbone = torch.hub.load('facebookresearch/dinov2', 'dinov2_vitb14')
+    #     # for param in self.backbone.parameters():
+    #     #     param.requires_grad = True
+    #     backbone, num_features = model_registry[pretrained_backbone_name](**cfg.backbone.kwargs)
+    #     backbone.num_features = num_features
+    #     print("load pretrained")
+    backbone_model = BaseMethod._BACKBONES[cfg.backbone.name]
+    print(cfg.backbone.name)
+    # initialize backbone
+    backbone = backbone_model(method=cfg.pretrain_method, **cfg.backbone.kwargs)
     if cfg.backbone.name.startswith("resnet"):
         # remove fc layer
         backbone.fc = nn.Identity()

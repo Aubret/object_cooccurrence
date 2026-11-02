@@ -209,18 +209,18 @@ class LVISPrecroped(Dataset):
         split="train",
         distinct_action=False,
         quadruplet=False,
+        min_img_size="_min5k",
         **kwargs
     ):
         # Metadata
         self.cat_ids = None
         self.img_idx = None
         self.h5_path = h5_path
-
         # IMPORTANT:
         # Don't open HDF5 here. Each DataLoader worker should
         # open its own handle lazily.
 
-        h5_path = os.path.join(h5_path, f"lvis_bb_{split}_scale05_min5k.h5")
+        h5_path = os.path.join(h5_path, f"lvis_bb_{split}_scale05{min_img_size}.h5")
         self.h5_path = h5_path
         self.h5_file = None
         self.images = None
@@ -247,6 +247,7 @@ class LVISPrecroped(Dataset):
             self.pointer[int(image_idx)].append(idx)
 
         print(f"Dataset: {len(self.df)} objects")
+        print(self.single)
 
 
     def __len__(self):

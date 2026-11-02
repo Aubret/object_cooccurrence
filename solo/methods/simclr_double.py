@@ -52,13 +52,15 @@ class SimCLRDouble(BaseMethod):
         cfg.method_kwargs.use_bn = omegaconf_select(cfg, "method_kwargs.use_bn", True)
         cfg.method_kwargs.last_bn = omegaconf_select(cfg, "method_kwargs.last_bn", False)
         cfg.method_kwargs.layers = omegaconf_select(cfg, "method_kwargs.layers", 3)
+        cfg.method_kwargs.double_layers = omegaconf_select(cfg, "method_kwargs.double_layers", 3)
+        cfg.method_kwargs.double_temperature = omegaconf_select(cfg, "method_kwargs.double_temperature", 0.1)
         cfg.method_kwargs.alpha = omegaconf_select(cfg, "method_kwargs.alpha", 1)
 
         features = self.features_dim
         # projector
         if self.cfg.method_kwargs.alpha != 0:
             self.projector = self._build_mlp(
-                    cfg.method_kwargs.layers,
+                    cfg.method_kwargs.double_layers,
                     features,
                     proj_hidden_dim,
                     proj_output_dim,
@@ -187,11 +189,11 @@ class SimCLRDouble(BaseMethod):
 
         nce_loss_semantic = 0
         if self.cfg.method_kwargs.alpha != 0:
-            assert len(out["o"])  == 4, len(out["o"])
+            # assert len(out["o"])  == 4, len(out["o"])
             z3 = self.projector(out["o"][1] if len(out["o"]) <= 3 else out["o"][3])
             z4 = self.projector(out["o"][2])
             z_semantic = torch.cat((z3, z4))
-            nce_loss_semantic, pos_semantic , _ = simclr_loss_func2(z_semantic, indexes=indexes, temperature=self.temperature)
+            nce_loss_semantic, pos_semantic , _ = simclr_loss_func2(z_semantic, indexes=indexes, temperature=self.cfg.method_kwargs.double_temperature)
             self.log("train_nce_loss_semantic", nce_loss_semantic, on_epoch=True, sync_dist=True)
             self.log("positive_loss_semantic", pos_semantic.mean(), on_epoch=True, sync_dist=True)
 

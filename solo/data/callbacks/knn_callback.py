@@ -28,6 +28,7 @@ class KNNCallback(pl.Callback):
             train_data_path=self.cfg.train_path,
             val_data_path=self.cfg.val_path,
             data_format=self.cfg.format,
+            **self.cfg.dataset_kwargs
         )
         self.train_loader = DataLoader(
             train_dataset,

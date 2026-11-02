@@ -711,7 +711,7 @@ def prepare_datasets(
             Places(root=Path(train_data_path) / 'Places365', transform=transform, split="train", **dataset_kwargs)]
         )
     elif dataset in ["o365"]:
-        train_dataset = dataset_with_index(Objects365Crops)(str(train_data_path), transform=transform, **dataset_kwargs)
+        train_dataset = dataset_with_index(Objects365Crops)(str(train_data_path), transform=transform, split="train", **dataset_kwargs)
     elif dataset in ["i1k_o365"]:
         path = Path(train_data_path_second) / 'ImageNet'
         if path.exists():

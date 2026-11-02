@@ -8,11 +8,13 @@ from tqdm import tqdm
 
 DATA_ROOT = "/work/autolearn/aubret/Objects365/"
 
-INPUT_H5 = f"{DATA_ROOT}/train.h5"
-OUTPUT_H5 = f"{DATA_ROOT}/objects365_crops.h5"
-
 MIN_SIZE = 10000
 JPEG_QUALITY = 95
+
+
+INPUT_H5 = f"{DATA_ROOT}/train.h5"
+OUTPUT_H5 = f"{DATA_ROOT}/objects365_crops{MIN_SIZE}.h5"
+
 
 # ---------------------------------------------------------------------
 # Load metadata

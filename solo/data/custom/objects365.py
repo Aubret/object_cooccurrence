@@ -7,7 +7,7 @@ import time
 from collections import defaultdict
 
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, random_split
 import h5py
 import pandas as pd
 import numpy as np
@@ -157,8 +157,9 @@ class Objects365(Dataset):
 
 class Objects365Crops(Dataset):
     def __init__(self, data_root, transform=None, p=1.0, max_size=0, min_scale=0.2, max_scale=1, pairs=False,
-                 sort_model="clip", threshold=0.1, **kwargs):
+                 sort_model="clip", threshold=0.1, split="train", quadruplet=False, single=False, **kwargs):
 
+        #objects365_crops.h5
         self.h5 = h5py.File(os.path.join(data_root, "objects365_crops.h5"), 'r')
         self.mapping = json.load(open(os.path.join(data_root, "mapping.json")))
 
@@ -167,25 +168,51 @@ class Objects365Crops(Dataset):
         self.max_size = max_size
         self.p=p
         self.pairs = pairs
+        self.single = single
+        self.quadruplet = quadruplet
 
         # Build image_id -> crop indices
         print("Before pointer", flush=True)
 
+
+
+
+        generator = torch.Generator().manual_seed(42)
+        indices = torch.randperm(len(self.image_ids), generator=generator)
+        n_train = int(0.9 * len(self.image_ids))
+
+        if split == "train":
+            filter_image_ids = {idx: True for idx in indices[:n_train].tolist()}
+            # filter_image_ids = dict(indices[:n_train].tolist())
+        elif split == "val":
+            filter_image_ids = {idx: True for idx in indices[n_train:].tolist()}
+            # filter_image_ids = dict(indices[n_train:].tolist())
+        else:
+            raise ValueError(f"Unknown split: {split}")
+
+
         self.pointer = defaultdict(list)
+        self.indices = []
+        self.true_length = 0
         for idx, image_id in enumerate(self.image_ids):
-            self.pointer[int(image_id)].append(idx)
+            if image_id in filter_image_ids:
+                self.indices.append(idx)
+                self.pointer[int(image_id)].append(idx)
 
         l_mean = 0
         for p in self.pointer.values():
             l_mean += len(p)
         l_mean /= len(self.pointer)
 
-        self.true_length = len(self.images)
-        self.transform = copy.deepcopy(transform)
-        self.transform.transforms[0].transform.transforms[0] = RandomResizedCrop(
-            224, scale=(min_scale, max_scale), ratio=(3 / 4, 4 / 3), interpolation=transforms.InterpolationMode.BICUBIC)
-        self.transform.transforms[1].transform.transforms[0] = RandomResizedCrop(
-            224, scale=(min_scale, max_scale), ratio=(3 / 4, 4 / 3), interpolation=transforms.InterpolationMode.BICUBIC)
+
+
+        # self.true_length = len(self.indices)
+        self.transform = transform
+        # self.transform = copy.deepcopy(transform)
+        # self.transform.transforms[0].transform.transforms[0] = RandomResizedCrop(
+        #     224, scale=(min_scale, max_scale), ratio=(3 / 4, 4 / 3), interpolation=transforms.InterpolationMode.BICUBIC)
+        # self.transform.transforms[1].transform.transforms[0] = RandomResizedCrop(
+        #     224, scale=(min_scale, max_scale), ratio=(3 / 4, 4 / 3), interpolation=transforms.InterpolationMode.BICUBIC)
 
         if self.pairs:
             self.dataset = pd.read_csv(os.path.join(data_root, "pairs.csv"),header=None)
@@ -204,6 +231,7 @@ class Objects365Crops(Dataset):
         return self.true_length if not self.max_size else self.max_size
 
     def __getitem__(self, idx):
+        idx = self.indices[idx]
         if self.max_size:
             idx = (idx + np.random.randint(0, self.true_length // self.max_size) * self.max_size)
         if self.pairs:
@@ -222,6 +250,8 @@ class Objects365Crops(Dataset):
             idx = random.randrange(len(self.images))
         img1 = Image.open(io.BytesIO(self.images[idx])).convert("RGB")
 
+        if self.single:
+            return self.transform(img1, img1), idx
         # Default: random crop from the dataset
         # idx2 = random.randrange(len(self.images))
 
@@ -237,5 +267,8 @@ class Objects365Crops(Dataset):
 
         if idx2 == idx:
             img2 = img1
+
+        if self.quadruplet:
+            return self.transform(img1, img1, img1, img2), idx
 
         return self.transform(img1, img2), idx

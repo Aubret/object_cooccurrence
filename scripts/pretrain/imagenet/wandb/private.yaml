@@ -1,3 +1,5 @@
 enabled: True
 entity: "aaubret"
 project: "SSL-PROJ"
+group: "pretrain"
+job_type: "pretrain"

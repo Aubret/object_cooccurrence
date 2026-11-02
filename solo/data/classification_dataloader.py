@@ -42,6 +42,7 @@ from solo.data.custom.imagenet import ImgnetDataset, ImgNetDataset_42, ImageNetS
 from solo.data.custom.base import H5ClassificationDataset
 from solo.data.custom.mvimgnet import MVImgNet
 from solo.data.custom.nyuv2 import NYUDataset
+from solo.data.custom.objects365 import Objects365Crops
 from solo.data.custom.tinyimgnet import TinyDataset
 from solo.data.pretrain_dataloader import GaussianBlur, NCropAugmentation
 from solo.utils.sintel import sintel_transform, sintel_transform_simple
@@ -595,6 +596,9 @@ def prepare_datasets(
         # from solo.data.custom.lvis import LVISCroppedObjectDataset
         # train_dataset = LVISCroppedObjectDataset(train_data_path, T_train, split="train", single=True, **dataset_kwargs)
         # val_dataset = LVISCroppedObjectDataset(val_data_path, T_val, split="val", single=True, **dataset_kwargs)
+    elif dataset in ["o365"]:
+        train_dataset = Objects365Crops(str(train_data_path), T_train, split="train", single=True, **dataset_kwargs)
+        val_dataset = Objects365Crops(str(val_data_path), T_val, split="val", single=True, **dataset_kwargs)
     elif dataset in ['DTD', 'Flowers102', 'FGVCAircraft', 'Food101', 'OxfordIIITPet', 'Places365', 'StanfordCars',
                      'STL10', 'SUN397', 'Caltech101', 'STL10_224']:
         if dataset == "STL10_224": dataset = "STL10"

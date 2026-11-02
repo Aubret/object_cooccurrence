@@ -100,6 +100,7 @@ def add_and_assert_knn_clb_cfg(cfg: omegaconf.DictConfig) -> omegaconf.DictConfi
     cfg.knn_clb.format = omegaconf_select(cfg, "knn_clb.format", "image_folder")
     cfg.knn_clb.batch_size = omegaconf_select(cfg, "knn_clb.batch_size", 32)
     cfg.knn_clb.num_workers = omegaconf_select(cfg, "knn_clb.num_workers", 4)
+    cfg.knn_clb.dataset_kwargs = omegaconf_select(cfg, "knn_clb.dataset_kwargs", {})
 
     k = omegaconf_select(cfg, "knn_clb.k", 20)
     k = (k,) if isinstance(k, int) else k
